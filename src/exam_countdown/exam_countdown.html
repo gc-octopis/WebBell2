@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國高中各大考試倒數</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #00000000;
+        }
+
+        .examBox {
+            width: 21cm;
+            margin: 0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            -ms-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+            font-size: 5vw;
+        }
+
+        .exam {
+            display: flex;
+            margin: 1vh;
+            border-radius: 20px;
+            padding: 5px;
+            border: 3px solid black;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .examDate,
+        .examCountdownTime {
+            font-size: 2vw;
+            font-weight: lighter;
+        }
+
+        @media screen and (max-width: 21cm) {
+            .examBox {
+                width: 90vw;
+                font-size: 8vw;
+            }
+            .examDate,
+            .examCountdownTime{
+                font-size: 4vw;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="examBox"></div>
+</body>
+
+<script>
+    function countTime(start, end) {
+        var timeless = (end - start) % 86400_000;
+        var hour = parseInt(timeless / 3600_000);
+        var min = parseInt((timeless % 3600_000) / 60_000);
+        var sec = parseInt((timeless % 60_000) / 1_000);
+        return `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+    }
+
+    function countDate(start, end) {
+        return Math.ceil((end - start) / 86400_000);
+    }
+
+    function slashDate(date) {
+        return `(${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()})`;
+    }
+
+    function background(count, container) {
+        container.style.color = "#000000";
+
+        if (count > 300) {
+            container.style.background = "linear-gradient(0deg, #c000ff 0%, #ff00ff 100%)";
+        }else if (count > 200) {
+            container.style.background =  "linear-gradient(0deg, #00ff00 0%, #80ff80 100%)";
+        }else if (count > 100) {
+            container.style.background =  "linear-gradient(0deg, #ffc000 0%, #ffff00 100%)";
+        }else if (count > 50) {
+            container.style.background =  "linear-gradient(0deg, #f06060 0%, #ff8080 100%)";
+        }else if (count > 10) {
+            container.style.background =  "linear-gradient(0deg, #ff3030 0%, #ff6060 100%)";
+        }else if (count > 0) {
+            container.style.background = "none";
+            container.style.backgroundColor = "#000000";
+            container.style.color = "#ffffff";   
+        } else if (count == 0) {
+            container.style.background =  "linear-gradient(90deg,rgba(255, 0, 0, 1) 0%,rgba(255, 154, 0, 1) 10%,rgba(208, 222, 33, 1) 20%,rgba(79, 220, 74, 1) 30%,rgba(63, 218, 216, 1) 40%,rgba(47, 201, 226, 1) 50%,rgba(28, 127, 238, 1) 60%,rgba(95, 21, 242, 1) 70%,rgba(186, 12, 248, 1) 80%,rgba(251, 7, 217, 1) 90%,rgba(255, 0, 0, 1) 100%)"
+        }
+    }
+
+    function create(type, cls) {
+        let element = document.createElement(type);
+        element.classList.add(cls);
+        return element;
+    }
+
+    let qs = (selector, parentNode=document) => parentNode.querySelector(selector);
+
+    class Exam {
+        constructor(name, date) {
+            this.name = name;
+            this.date = new Date(date);
+            this.container = create('div', 'exam');
+            
+            this.examName = create('div', 'examName');
+            this.examName.innerText = this.name;
+
+            this.examDate = create('div', 'examDate');
+            this.examDate.innerText = slashDate(this.date); 
+
+            this.examCountdown = create('div', 'examCountdown');
+            this.examCountdownTime = create('div', 'examCountdownTime');
+
+            this.container.appendChild(this.examName);
+            this.container.appendChild(this.examDate);
+            this.container.appendChild(this.examCountdownTime);
+            this.container.appendChild(this.examCountdown);
+
+            qs('.examBox').appendChild(this.container);
+        }
+
+        update(now) {
+            let days = countDate(now, this.date)
+            this.examCountdown.innerText = days;
+            this.examCountdownTime.innerText = countTime(now, this.date);
+            background(days, this.container);
+        }
+    };
+</script>
+<script>
+    async function main() {
+        let examList;
+        let isOffline = false;
+        
+        await fetch('examList.json')
+            .then(r => r.json())
+            .then(json => examList = json)
+            .catch(error => isOffline = true);
+
+        if (isOffline) await fetch('examList.json')
+            .then(r => r.json())
+            .then(json => examList = json)
+        
+        let exams = [];
+
+        for (exam of examList) {
+            exams.push(new Exam(exam.name, exam.date));
+        }
+
+        setInterval(() => {
+
+            var today = new Date();
+            for (exam of exams) exam.update(today);
+
+        }, 250);
+    }
+    main();
+
+</script>
+
+</html>
