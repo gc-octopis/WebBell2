@@ -5,9 +5,9 @@ const invoke = window.__TAURI__.invoke;
 
 const AudioPlayer = {
     audio: null,
-    audioStartPoint: get("audioStartPoint") || 0,
-    audioLength: get("audioLength") || 10,
-    audioVolume: get("audioVolume") || 0.8,
+    audioStartPoint: get("audioStartPoint") ?? 0,
+    audioLength: get("audioLength") ?? 10,
+    audioVolume: get("audioVolume") ?? 80,
     isFadeIn: false,
     isFadeOut: false,
 
@@ -57,9 +57,9 @@ const AudioPlayer = {
             point.max = `${this.audio.duration}`;
             point.value = "0";
             this.audio.loop = true;
-            id("audioStartPoint").value = get("audioStartPoint");
-            id("audioLengthSet").value = get("audioLength");
-            id("audioVolumeSet").value = get("audioVolume");
+            id("audioStartPoint").value = get("audioStartPoint") ?? 0;
+            id("audioLengthSet").value = get("audioLength") ?? 10;
+            id("audioVolumeSet").value = get("audioVolume") ?? 80;
             id("fade-in").checked = get("isFadeIn");
             id("fade-out").checked = get("isFadeOut");
             this.setAudioStartPoint();
