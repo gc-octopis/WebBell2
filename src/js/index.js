@@ -10,7 +10,7 @@ TODO:
 
 */
 
-
+const { getVersion } = window.__TAURI__.app;
 
 async function main() {
 
@@ -21,16 +21,7 @@ async function main() {
     AudioPlayer.init();
 
 
-    // this makes a dialog to prevent accidently closing the tab
-    // also makes user unable to close the electron window
-    // window.onbeforeunload = () => "prevent leaving";
-
-    /*
-
-    remember to enable onbeforeunload later.
-
-
-    */
+    id("version").innerText = await getVersion();
 
     // Week name array
     let week = ["日", "一", "二", "三", "四", "五", "六"];
