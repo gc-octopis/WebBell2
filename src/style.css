@@ -144,7 +144,7 @@ body{
 }
 
 #logo {
-    width: 10%;
+    width: 2em;
     fill: var(--text-color);
     align-self: center;
 }

@@ -1,13 +1,13 @@
 // Setup the bell's audio file and the range of possible strat point, also run other set property functions for the first time.
-const { open } = window.__TAURI__.dialog;
-const { convertFileSrc } = window.__TAURI__.tauri;
-const invoke = window.__TAURI__.invoke;
+const { open } = window.__TAURI_PLUGIN_DIALOG__;
+const { convertFileSrc } = window.__TAURI__.core;
+const { invoke } = window.__TAURI__.core;
 
 const AudioPlayer = {
     audio: null,
     audioStartPoint: get("audioStartPoint") ?? 0,
     audioLength: get("audioLength") ?? 10,
-    audioVolume: get("audioVolume") ?? 80,
+    audioVolume: get("audioVolume") ?? 0.8,
     isFadeIn: false,
     isFadeOut: false,
 
@@ -18,35 +18,26 @@ const AudioPlayer = {
     },
 
     async loadAudio(input = null, type = null) {
-        // let file = id("ain").files;
-        // let path = get("audioPath");
 
-        // if (file.length != 0) {
-        //     let link = URL.createObjectURL(file[0]);
-        //     this.audio.src = link;
-        //     set("audioPath", file[0].path);
-        // } else if (path !== null) {
-        //     this.audio.src = path;
-        // } else {
-        //     this.audio.src = "ring.mp3";
-        // }
+        let audioData = JSON.parse(get("audioData"));
 
-        let path = get("audioPath")
+        if (input == null && audioData !== null) {
+            input = audioData.input;
+            type = audioData.type;
+        }
 
         if (input !== null) {
             if (type == "file") {
                 let link = convertFileSrc(input);
                 this.audio.src = link;
-                set("audioPath", input[0].path);
+                set("audioData", JSON.stringify({input: input, type: type}));
             } else if (type == "link") {
-                // need to fix link expiration
                 invoke("dlp", { link: input })
                     .then(pureLink => {
                         this.audio.src = pureLink;
+                        set("audioData", JSON.stringify({input: input, type: type}));
                     });
             }
-        } else if (path !== null) {
-            this.audio.src = path;
         } else {
             this.audio.src = "ring.mp3";
         }
@@ -58,8 +49,8 @@ const AudioPlayer = {
             point.value = "0";
             this.audio.loop = true;
             id("audioStartPoint").value = get("audioStartPoint") ?? 0;
-            id("audioLengthSet").value = get("audioLength") ?? 10;
-            id("audioVolumeSet").value = get("audioVolume") ?? 80;
+            id("audioLengthSet").value = get("audioLength") ?? 10; 
+            id("audioVolumeSet").value = get("audioVolume") ?? 0.8;
             id("fade-in").checked = get("isFadeIn");
             id("fade-out").checked = get("isFadeOut");
             this.setAudioStartPoint();
@@ -74,9 +65,12 @@ const AudioPlayer = {
         // id("ain").onchange = () => this.loadAudio();
 
         id("ain-btn").onclick = async () => {
-            this.loadAudio(await open({
+            let file = await open({
                 multiple: false,
-            }), "file");
+                directory: false,
+            });
+            console.log(file);
+            this.loadAudio(file, "file");
         };
 
         id("ain-link").onchange = async () => {
@@ -104,6 +98,14 @@ const AudioPlayer = {
         qs("#title #logo #path1784").onclick = () => this.playAudio();
 
         id("audio-play-test").onclick = () => this.playAudio();
+
+        id("audioReset").onclick = () => {
+            localStorage.removeItem("audioStartPoint");
+            localStorage.removeItem("audioLength");
+            localStorage.removeItem("audioVolume");
+            localStorage.removeItem("audioData");
+            this.loadAudio();
+        };
     },
 
     setAudioStartPoint() {
@@ -128,9 +130,9 @@ const AudioPlayer = {
     },
 
     setAudioVolume() {
-        this.audioVolume = id("audioVolumeSet").value / 100;
+        this.audioVolume = id("audioVolumeSet").value;
         this.audio.volume = this.audioVolume;
-        set("audioVolume", this.audioVolume * 100);
+        set("audioVolume", this.audioVolume);
         id("audioVolume").innerHTML = `音量大小：${this.audioVolume * 100}%`;
     },
 

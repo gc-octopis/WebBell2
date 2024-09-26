@@ -1,32 +1,33 @@
-const { checkUpdate, installUpdate, onUpdaterEvent } = window.__TAURI__.updater;
-const { relaunch } = window.__TAURI__.process;
+const { check } = window.__TAURI_PLUGIN_UPDATER__;
+const { relaunch } = window.__TAURI_PLUGIN_PROCESS__;
 
 async function updater() {
-    const unlisten = await onUpdaterEvent(({ error, status }) => {
-        // This will log all updater events, including status updates and errors.
-        console.log('Updater event', error, status)
-    })
-
-    try {
-        const { shouldUpdate, manifest } = await checkUpdate()
-
-        if (shouldUpdate) {
-            // You could show a dialog asking the user if they want to install the update here.
-            console.log(
-                `Installing update ${manifest?.version}, ${manifest?.date}, ${manifest?.body}`
-            )
-
-            // Install the update. This will also restart the app on Windows!
-            await installUpdate()
-
-            // On macOS and Linux you will need to restart the app manually.
-            // You could use this step to display another confirmation dialog.
-            await relaunch()
+    
+    const update = await check();
+    if (update) {
+      console.log(
+        `found update ${update.version} from ${update.date} with notes ${update.body}`
+      );
+      let downloaded = 0;
+      let contentLength = 0;
+      // alternatively we could also call update.download() and update.install() separately
+      await update.downloadAndInstall((event) => {
+        switch (event.event) {
+          case 'Started':
+            contentLength = event.data.contentLength;
+            console.log(`started downloading ${event.data.contentLength} bytes`);
+            break;
+          case 'Progress':
+            downloaded += event.data.chunkLength;
+            console.log(`downloaded ${downloaded} from ${contentLength}`);
+            break;
+          case 'Finished':
+            console.log('download finished');
+            break;
         }
-    } catch (error) {
-        console.error(error)
+      });
+    
+      console.log('update installed');
+      await relaunch();
     }
-
-    // you need to call unlisten if your handler goes out of scope, for example if the component is unmounted.
-    unlisten();
 }
