@@ -4617,7 +4617,7 @@ dependencies = [
 
 [[package]]
 name = "webbell2"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "serde",
  "serde_json",
