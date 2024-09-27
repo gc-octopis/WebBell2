@@ -1,6 +1,6 @@
 [package]
 name = "webbell2"
-version = "0.3.5"
+version = "0.3.6"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -15,7 +15,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.0.0-rc", features = [] }
 
 [dependencies]
-tauri = { version = "2.0.0-rc", features = ["protocol-asset", "devtools"] }
+tauri = { version = "2.0.0-rc", features = ["protocol-asset"] }
 tauri-plugin-shell = "2.0.0-rc"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
